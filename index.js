@@ -18,23 +18,23 @@ const plainTextSend = async (message) => {
     {
       username: slack_config.botName, // 슬랙에 표시될 봇이름
       channel: slack_config.channel, // 메시지가 전송될 채널
-      icon_emoji: slack_config.icon,
-      text: message,
+      icon_emoji: slack_config.icon, // 봇 아이콘
+      text: message, //전송할 text
     },
     (err, response) => {
-      //   console.log(response, err); // 보낼 때마다 내용을 확인하고 싶은 경우 주석해제
+      //   console.log(response, err);
     }
   );
 };
 
-const send = async (message, time) => {
+const studyTimeSend = async (message, time) => {
   slack.api(
     "chat.postMessage",
     {
       username: slack_config.botName, // 슬랙에 표시될 봇이름
-      channel: slack_config.channel,
-      icon_emoji: slack_config.icon,
-      text: message,
+      channel: slack_config.channel, // 메시지가 전송될 채널
+      icon_emoji: slack_config.icon, // 봇 아이콘
+      text: message, //전송할 text
       attachments: JSON.stringify([
         {
           color: "#36a64f",
@@ -171,7 +171,7 @@ rtm.on("message", (message) => {
               plainTextSend("에러");
               return;
             }
-            send(`공부를 종료했습니다.`, secondToHHMMSS(studyTime));
+            studyTimeSend(`공부를 종료했습니다.`, secondToHHMMSS(studyTime));
             //여기서 저장도 해야되긴하는데, 아직 구현 x
             // - PK 는 id 그대로
             // - SK 는 현재 년월일 구한후 YYYY-MM-DD
@@ -220,7 +220,7 @@ rtm.on("message", (message) => {
 
           let studyTime = Math.floor(ts / 1000) - data.Items[0].timestamp; //second
 
-          send(`공부중입니다.`, secondToHHMMSS(studyTime));
+          studyTimeSend(`공부중입니다.`, secondToHHMMSS(studyTime));
           //여기서 저장도 해야되긴하는데, 아직 구현 x
           // - PK 는 id 그대로
           // - SK 는 현재 년월일 구한후 YYYY-MM-DD
@@ -235,6 +235,6 @@ rtm.on("message", (message) => {
   }
 
   if (message.text === "!test") {
-    send("테스트", 1);
+    studyTimeSend("테스트", 1);
   }
 });
