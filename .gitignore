@@ -1,4 +1,9 @@
+# mac OS 
 .DS_Store
+
+# config 
+aws_config.json
+slack_config.json
 
 # Logs
 logs
