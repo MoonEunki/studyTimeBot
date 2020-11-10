@@ -62,7 +62,7 @@ const secondToHHMMSS = (second) => {
 
 rtm.start();
 
-rtm.on("message", (message) => {
+rtm.on("message", async (message) => {
   if (message.text === "!in") {
     let params = {
       TableName: tableName,
@@ -178,41 +178,35 @@ rtm.on("message", (message) => {
   }
 
   if (message.text === "!status") {
-    let params = {
-      TableName: tableName,
-      KeyConditionExpression: "PK = :PK and SK = :SK",
-      ExpressionAttributeValues: {
-        ":PK": message.user,
-        ":SK": "status",
-      },
-    };
+    const test = await getUserData(message.user);
+    console.log(test);
 
-    docClient.query(params, (err, data) => {
-      if (err) {
-        // console.error(` select 실패${err}`);
-        return;
-      }
+    // docClient.query(params, (err, data) => {
+    //   if (err) {
+    //     // console.error(` select 실패${err}`);
+    //     return;
+    //   }
 
-      if (data.Items.length === 0) {
-        plainTextSend("등록되지 않은 유저입니다");
-      } else {
-        //공부중이었던 유저
-        if (data.Items[0].status === 1) {
-          let studyTime =
-            Math.floor(message.event_ts) - data.Items[0].timestamp; //second
+    //   if (data.Items.length === 0) {
+    //     plainTextSend("등록되지 않은 유저입니다");
+    //   } else {
+    //     //공부중이었던 유저
+    //     if (data.Items[0].status === 1) {
+    //       let studyTime =
+    //         Math.floor(message.event_ts) - data.Items[0].timestamp; //second
 
-          studyTimeSend(`공부중입니다.`, secondToHHMMSS(studyTime));
-          //여기서 저장도 해야되긴하는데, 아직 구현 x
-          // - PK 는 id 그대로
-          // - SK 는 현재 년월일 구한후 YYYY-MM-DD
-          // - studyTime 컬럼에 아까 출력했던 시간을 초로 저장
-          // - 만약 위 데이터가 있는경우, studyTime을 추가로 + 해서 업데이트하는식으로
-        }
-        if (data.Items[0].status === 0) {
-          plainTextSend("공부를 종료한 유저입니다");
-        }
-      }
-    });
+    //       studyTimeSend(`공부중입니다.`, secondToHHMMSS(studyTime));
+    //       //여기서 저장도 해야되긴하는데, 아직 구현 x
+    //       // - PK 는 id 그대로
+    //       // - SK 는 현재 년월일 구한후 YYYY-MM-DD
+    //       // - studyTime 컬럼에 아까 출력했던 시간을 초로 저장
+    //       // - 만약 위 데이터가 있는경우, studyTime을 추가로 + 해서 업데이트하는식으로
+    //     }
+    //     if (data.Items[0].status === 0) {
+    //       plainTextSend("공부를 종료한 유저입니다");
+    //     }
+    //   }
+    // });
   }
 
   if (message.text === "!help") {
@@ -228,3 +222,26 @@ rtm.on("message", (message) => {
     studyTimeSend("테스트", 1);
   }
 });
+
+const getUserData = (userId) => {
+  return new Promise((resolve, reject) => {
+    const params = {
+      TableName: tableName,
+      KeyConditionExpression: "PK = :PK and SK = :SK",
+      ExpressionAttributeValues: {
+        ":PK": userId,
+        ":SK": "status",
+      },
+    };
+
+    docClient.query(params, (err, data) => {
+      if (err) {
+        console.log(err);
+        reject(err);
+      } else {
+        console.log(data);
+        resolve(data);
+      }
+    });
+  });
+};
