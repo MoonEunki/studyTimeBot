@@ -1,11 +1,10 @@
 const AWS = require("aws-sdk");
 AWS.config.loadFromPath("./config/aws_config.json");
-const docClient = new AWS.DynamoDB.DocumentClient();
-
+const slack_config = require("./config/slack_config.json");
 const Slack = require("slack-node");
 const RtmPkg = require("@slack/rtm-api");
-const slack_config = require("./config/slack_config.json");
 const { RTMClient } = RtmPkg;
+const docClient = new AWS.DynamoDB.DocumentClient();
 
 const token = slack_config.token; // slack token
 const rtm = new RTMClient(token);
@@ -54,15 +53,10 @@ const secondToHHMMSS = (second) => {
   let minutes = Math.floor((sec_num - hours * 3600) / 60);
   let seconds = sec_num - hours * 3600 - minutes * 60;
 
-  if (hours < 10) {
-    hours = `0${hours}`;
-  }
-  if (minutes < 10) {
-    minutes = `0${minutes}`;
-  }
-  if (seconds < 10) {
-    seconds = `0${seconds}`;
-  }
+  hours < 10 ? (hours = `0${hours}`) : hours;
+  minutes < 10 ? (minutes = `0${minutes}`) : minutes;
+  seconds < 10 ? (seconds = `0${seconds}`) : seconds;
+
   return `${hours}시 ${minutes}분 ${seconds}초`;
 };
 
