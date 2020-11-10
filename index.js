@@ -91,7 +91,7 @@ rtm.on("message", async (message) => {
     const data = await getUserData(message.user);
 
     //결과값이 없는경우 신규유저다
-    if (data.Items.length === 0) {
+    if (data.Count === 0) {
       let params = {
         TableName: tableName,
         Item: {
@@ -139,7 +139,7 @@ rtm.on("message", async (message) => {
     const data = await getUserData(message.user);
 
     //신규유저
-    if (data.Items.length === 0) {
+    if (data.Count === 0) {
       plainTextSend("등록되지 않은 유저입니다");
     }
     //기존 유저
@@ -177,7 +177,7 @@ rtm.on("message", async (message) => {
     const data = await getUserData(message.user);
 
     //신규유저
-    if (data.Items.length === 0) {
+    if (data.Count === 0) {
       plainTextSend("등록되지 않은 유저입니다");
     }
     //기존유저
