@@ -1,5 +1,5 @@
 const AWS = require("aws-sdk");
-AWS.config.loadFromPath("./config/aws_config.json");
+AWS.config.loadFromPath("./config/aws_config.json"); //로컬에서 테스트하기위해 있는것, EC2는 role 으로 생략함
 const docClient = new AWS.DynamoDB.DocumentClient();
 
 const Slack = require("slack-node");
@@ -87,14 +87,13 @@ rtm.on("message", (message) => {
 
       //결과값이 없는경우 신규유저다
       if (data.Items.length === 0) {
-        let ts = Date.now();
         let params = {
           TableName: tableName,
           Item: {
             PK: message.user,
             SK: "status",
             status: 1,
-            timestamp: Math.floor(ts / 1000),
+            timestamp: Math.floor(message.event_ts),
           },
         };
         docClient.put(params, (err, data) => {
@@ -105,7 +104,6 @@ rtm.on("message", (message) => {
           plainTextSend(`공부를 시작했습니다`);
         });
       } else {
-        let ts = Date.now();
         if (data.Items[0].status === 1) {
           plainTextSend(`공부중인 유저입니다`);
         }
@@ -117,7 +115,7 @@ rtm.on("message", (message) => {
               PK: message.user,
               SK: "status",
               status: 1,
-              timestamp: Math.floor(ts / 1000),
+              timestamp: Math.floor(message.event_ts),
             },
           };
           docClient.put(params, (err, data) => {
@@ -153,9 +151,8 @@ rtm.on("message", (message) => {
       } else {
         //공부중이었던 유저
         if (data.Items[0].status === 1) {
-          let ts = Date.now();
-
-          let studyTime = Math.floor(ts / 1000) - data.Items[0].timestamp; //second
+          let studyTime =
+            Math.floor(message.event_ts) - data.Items[0].timestamp; //second
 
           let params = {
             TableName: tableName,
@@ -163,7 +160,7 @@ rtm.on("message", (message) => {
               PK: message.user,
               SK: "status",
               status: 0,
-              timestamp: Math.floor(ts / 1000),
+              timestamp: Math.floor(message.event_ts),
             },
           };
           docClient.put(params, (err, data) => {
@@ -184,15 +181,6 @@ rtm.on("message", (message) => {
         }
       }
     });
-  }
-
-  if (message.text === "!help") {
-    plainTextSend(`
-  도움말
-  \`!in\` 공부시작
-  \`!out\` 공부종료
-  \`!status\` 현재상태
-      `);
   }
 
   if (message.text === "!status") {
@@ -216,9 +204,8 @@ rtm.on("message", (message) => {
       } else {
         //공부중이었던 유저
         if (data.Items[0].status === 1) {
-          let ts = Date.now();
-
-          let studyTime = Math.floor(ts / 1000) - data.Items[0].timestamp; //second
+          let studyTime =
+            Math.floor(message.event_ts) - data.Items[0].timestamp; //second
 
           studyTimeSend(`공부중입니다.`, secondToHHMMSS(studyTime));
           //여기서 저장도 해야되긴하는데, 아직 구현 x
@@ -232,6 +219,15 @@ rtm.on("message", (message) => {
         }
       }
     });
+  }
+
+  if (message.text === "!help") {
+    plainTextSend(`
+  도움말
+  \`!in\` 공부시작
+  \`!out\` 공부종료
+  \`!status\` 현재상태
+      `);
   }
 
   if (message.text === "!test") {
