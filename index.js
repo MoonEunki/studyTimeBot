@@ -1,5 +1,5 @@
 const AWS = require("aws-sdk");
-AWS.config.loadFromPath("./config/aws_config.json"); //로컬에서 테스트하기위해 있는것, EC2는 role 으로 생략함
+AWS.config.loadFromPath("./config/aws_config.json");
 const docClient = new AWS.DynamoDB.DocumentClient();
 
 const Slack = require("slack-node");
