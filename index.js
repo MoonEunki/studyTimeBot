@@ -60,169 +60,6 @@ const secondToHHMMSS = (second) => {
   return `${hours}시 ${minutes}분 ${seconds}초`;
 };
 
-rtm.start();
-
-rtm.on("message", async (message) => {
-  if (message.text === "!in") {
-    let params = {
-      TableName: tableName,
-      KeyConditionExpression: "PK = :PK and SK = :SK",
-      ExpressionAttributeValues: {
-        ":PK": message.user,
-        ":SK": "status",
-      },
-    };
-
-    docClient.query(params, (err, data) => {
-      if (err) {
-        // console.error(` select 실패${err}`);
-        return;
-      }
-
-      //결과값이 없는경우 신규유저다
-      if (data.Items.length === 0) {
-        let params = {
-          TableName: tableName,
-          Item: {
-            PK: message.user,
-            SK: "status",
-            status: 1,
-            timestamp: Math.floor(message.event_ts),
-          },
-        };
-        docClient.put(params, (err, data) => {
-          if (err) {
-            plainTextSend("신규유저 등록 실패");
-            return;
-          }
-          plainTextSend(`공부를 시작했습니다`);
-        });
-      } else {
-        if (data.Items[0].status === 1) {
-          plainTextSend(`공부중인 유저입니다`);
-        }
-        //공부 안하고있던 유저
-        else if (data.Items[0].status === 0) {
-          let params = {
-            TableName: tableName,
-            Item: {
-              PK: message.user,
-              SK: "status",
-              status: 1,
-              timestamp: Math.floor(message.event_ts),
-            },
-          };
-          docClient.put(params, (err, data) => {
-            if (err) {
-              plainTextSend("에러");
-              return;
-            }
-            plainTextSend(`공부를 시작했습니다`);
-          });
-        }
-      }
-    });
-  }
-
-  if (message.text === "!out") {
-    let params = {
-      TableName: tableName,
-      KeyConditionExpression: "PK = :PK and SK = :SK",
-      ExpressionAttributeValues: {
-        ":PK": message.user,
-        ":SK": "status",
-      },
-    };
-
-    docClient.query(params, (err, data) => {
-      if (err) {
-        // console.error(` select 실패${err}`);
-        return;
-      }
-
-      if (data.Items.length === 0) {
-        plainTextSend("등록되지 않은 유저입니다");
-      } else {
-        //공부중이었던 유저
-        if (data.Items[0].status === 1) {
-          let studyTime =
-            Math.floor(message.event_ts) - data.Items[0].timestamp; //second
-
-          let params = {
-            TableName: tableName,
-            Item: {
-              PK: message.user,
-              SK: "status",
-              status: 0,
-              timestamp: Math.floor(message.event_ts),
-            },
-          };
-          docClient.put(params, (err, data) => {
-            if (err) {
-              plainTextSend("에러");
-              return;
-            }
-            studyTimeSend(`공부를 종료했습니다.`, secondToHHMMSS(studyTime));
-            //여기서 저장도 해야되긴하는데, 아직 구현 x
-            // - PK 는 id 그대로
-            // - SK 는 현재 년월일 구한후 YYYY-MM-DD
-            // - studyTime 컬럼에 아까 출력했던 시간을 초로 저장
-            // - 만약 위 데이터가 있는경우, studyTime을 추가로 + 해서 업데이트하는식으로
-          });
-        }
-        if (data.Items[0].status === 0) {
-          plainTextSend("공부를 종료한 유저입니다");
-        }
-      }
-    });
-  }
-
-  if (message.text === "!status") {
-    const test = await getUserData(message.user);
-    console.log(test);
-
-    // docClient.query(params, (err, data) => {
-    //   if (err) {
-    //     // console.error(` select 실패${err}`);
-    //     return;
-    //   }
-
-    //   if (data.Items.length === 0) {
-    //     plainTextSend("등록되지 않은 유저입니다");
-    //   } else {
-    //     //공부중이었던 유저
-    //     if (data.Items[0].status === 1) {
-    //       let studyTime =
-    //         Math.floor(message.event_ts) - data.Items[0].timestamp; //second
-
-    //       studyTimeSend(`공부중입니다.`, secondToHHMMSS(studyTime));
-    //       //여기서 저장도 해야되긴하는데, 아직 구현 x
-    //       // - PK 는 id 그대로
-    //       // - SK 는 현재 년월일 구한후 YYYY-MM-DD
-    //       // - studyTime 컬럼에 아까 출력했던 시간을 초로 저장
-    //       // - 만약 위 데이터가 있는경우, studyTime을 추가로 + 해서 업데이트하는식으로
-    //     }
-    //     if (data.Items[0].status === 0) {
-    //       plainTextSend("공부를 종료한 유저입니다");
-    //     }
-    //   }
-    // });
-  }
-
-  if (message.text === "!help") {
-    plainTextSend(`
-  도움말
-  \`!in\` 공부시작
-  \`!out\` 공부종료
-  \`!status\` 현재상태
-      `);
-  }
-
-  if (message.text === "!test") {
-    studyTimeSend("테스트", 1);
-  }
-});
-
 const getUserData = (userId) => {
   return new Promise((resolve, reject) => {
     const params = {
@@ -245,3 +82,125 @@ const getUserData = (userId) => {
     });
   });
 };
+
+rtm.start();
+
+rtm.on("message", async (message) => {
+  //공부시작
+  if (message.text === "!in") {
+    const data = await getUserData(message.user);
+
+    //결과값이 없는경우 신규유저다
+    if (data.Items.length === 0) {
+      let params = {
+        TableName: tableName,
+        Item: {
+          PK: message.user,
+          SK: "status",
+          status: 1,
+          timestamp: Math.floor(message.event_ts),
+        },
+      };
+      docClient.put(params, (err, data) => {
+        if (err) {
+          plainTextSend("신규유저 등록 실패");
+          return;
+        }
+        plainTextSend(`공부를 시작했습니다`);
+      });
+    } else {
+      if (data.Items[0].status === 1) {
+        plainTextSend(`공부중인 유저입니다`);
+      }
+      //공부 안하고있던 유저
+      else if (data.Items[0].status === 0) {
+        let params = {
+          TableName: tableName,
+          Item: {
+            PK: message.user,
+            SK: "status",
+            status: 1,
+            timestamp: Math.floor(message.event_ts),
+          },
+        };
+        docClient.put(params, (err, data) => {
+          if (err) {
+            plainTextSend("에러");
+            return;
+          }
+          plainTextSend(`공부를 시작했습니다`);
+        });
+      }
+    }
+  }
+
+  //공부종료
+  if (message.text === "!out") {
+    const data = await getUserData(message.user);
+
+    //신규유저
+    if (data.Items.length === 0) {
+      plainTextSend("등록되지 않은 유저입니다");
+    }
+    //기존 유저
+    else {
+      //공부중이었던 유저가 공부 종료
+      if (data.Items[0].status === 1) {
+        let studyTime = Math.floor(message.event_ts) - data.Items[0].timestamp; //second
+
+        let params = {
+          TableName: tableName,
+          Item: {
+            PK: message.user,
+            SK: "status",
+            status: 0,
+            timestamp: Math.floor(message.event_ts),
+          },
+        };
+        docClient.put(params, (err, data) => {
+          if (err) {
+            plainTextSend("에러");
+            return;
+          }
+          studyTimeSend(`공부를 종료했습니다.`, secondToHHMMSS(studyTime));
+        });
+      }
+      //원래 공부 종료상태였던 유저
+      if (data.Items[0].status === 0) {
+        plainTextSend("공부를 종료한 유저입니다");
+      }
+    }
+  }
+
+  //현재 상태가 공부중인지 아닌지 알려주기
+  if (message.text === "!status") {
+    const data = await getUserData(message.user);
+
+    //신규유저
+    if (data.Items.length === 0) {
+      plainTextSend("등록되지 않은 유저입니다");
+    }
+    //기존유저
+    else {
+      //공부중인 유저
+      if (data.Items[0].status === 1) {
+        let studyTime = Math.floor(message.event_ts) - data.Items[0].timestamp; //second
+        studyTimeSend(`공부중입니다.`, secondToHHMMSS(studyTime));
+      }
+      //공부중이 아닌유저
+      else if (data.Items[0].status === 0) {
+        plainTextSend("공부를 종료한 유저입니다");
+      }
+    }
+  }
+
+  //명령어 띄어주기
+  if (message.text === "!help") {
+    plainTextSend(`
+  도움말
+  \`!in\` 공부시작
+  \`!out\` 공부종료
+  \`!status\` 현재상태
+      `);
+  }
+});
