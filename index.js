@@ -36,7 +36,8 @@ const studyTimeSend = async (message, time) => {
       text: message, //전송할 text
       attachments: JSON.stringify([
         {
-          color: "#36a64f",
+          color: "#3333FF", //파란색
+          // color: "#36a64f", //초록색
           text: `공부시간 \`${time}\` `,
         },
       ]),
