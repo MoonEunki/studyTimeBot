@@ -106,10 +106,10 @@ rtm.on("message", async (message) => {
       };
       docClient.put(params, (err, data) => {
         if (err) {
-          plainTextSend("신규유저 등록 실패");
+          plainTextSend("에러: 신규유저 등록 실패");
           return;
         }
-        plainTextSend(`공부를 시작했습니다`);
+        plainTextSend(`:computer: 공부를 시작했습니다`);
       });
     } else {
       if (data.Items[0].status === 0) {
@@ -129,11 +129,11 @@ rtm.on("message", async (message) => {
             plainTextSend("에러");
             return;
           }
-          plainTextSend(`공부를 시작했습니다`);
+          plainTextSend(`:computer: 공부를 시작했습니다`);
         });
       }
       if (data.Items[0].status === 1) {
-        plainTextSend(`공부중인 유저입니다`);
+        plainTextSend(":computer:`공부중`입니다");
       }
       if (data.Items[0].status === 2) {
         let stopTimeCalc =
@@ -155,7 +155,9 @@ rtm.on("message", async (message) => {
             plainTextSend("에러" + err);
             return;
           }
-          plainTextSend("공부를 재시작했습니다."); //업그레이드 할필요있음
+          plainTextSend(
+            ":computer:`공부중`입니다 (자리비움:`/stop`,공부종료:`/out`)"
+          ); //공부시간,자리비움시간도 표시하게 하기?
         });
       }
     }
@@ -184,9 +186,6 @@ rtm.on("message", async (message) => {
           userData.timeStamp -
           userData.stopTimeCalc; //second
 
-        console.log(`순공부시간 ${studyTime}`);
-        console.log(`자리비움 시간 ${userData.stopTimeCalc}`);
-
         let params = {
           TableName: tableName,
           Item: {
@@ -205,13 +204,15 @@ rtm.on("message", async (message) => {
           }
           console.log(userData.stopTimeCalc);
           plainTextSend(`공부를 종료했습니다.
-          순 공부시간 ${studyTime}
-          자리비움 시간 ${userData.stopTimeCalc}`);
+          *순 공부시간*: ${secondToHHMMSS(studyTime)}
+          *자리비움 시간*: ${secondToHHMMSS(userData.stopTimeCalc)}`);
         });
       }
 
       if (data.Items[0].status === 2) {
-        plainTextSend("자리비움 상태입니다");
+        plainTextSend(
+          ":hourglass_flowing_sand: `자리비움중` 입니다 (다시 시작 `!in`)"
+        );
       }
     }
   }
@@ -236,7 +237,9 @@ rtm.on("message", async (message) => {
         studyTimeSend(`공부중입니다.`, secondToHHMMSS(studyTime));
       }
       if (data.Items[0].status === 2) {
-        plainTextSend("자리비움 상태입니다"); // Todo:자리비움 시간도 보여줘야되나 ?
+        plainTextSend(
+          ":hourglass_flowing_sand: `자리비움중` 입니다 (다시 시작 `!in`)다"
+        ); // Todo:자리비움 시간도 보여줘야되나 ?
       }
     }
   }
@@ -267,11 +270,15 @@ rtm.on("message", async (message) => {
             plainTextSend("에러");
             return;
           }
-          plainTextSend("`자리비움`중 입니다 ( 다시 시작 `!in` )");
+          plainTextSend(
+            ":hourglass_flowing_sand: `자리비움중` 입니다 (다시 시작 `!in`)"
+          );
         });
       }
       if (data.Items[0].status === 2) {
-        plainTextSend("자리비움 상태입니다");
+        plainTextSend(
+          ":hourglass_flowing_sand: `자리비움중` 입니다 (다시 시작 `!in`)"
+        );
       }
     }
   }
