@@ -200,6 +200,7 @@ rtm.on("message", async (message) => {
   도움말
   \`!in\` 공부시작
   \`!out\` 공부종료
+  \`!stop\` 자리비움
   \`!status\` 현재상태
       `);
   }
