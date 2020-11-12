@@ -99,7 +99,9 @@ rtm.on("message", async (message) => {
           PK: message.user,
           SK: "status",
           status: 1,
-          timestamp: Math.floor(message.event_ts),
+          timeStamp: Math.floor(message.event_ts),
+          stopTime: 0,
+          stopTimeCalc: 0,
         },
       };
       docClient.put(params, (err, data) => {
@@ -117,7 +119,9 @@ rtm.on("message", async (message) => {
             PK: message.user,
             SK: "status",
             status: 1,
-            timestamp: Math.floor(message.event_ts),
+            timeStamp: Math.floor(message.event_ts),
+            stopTime: 0,
+            stopTimeCalc: 0,
           },
         };
         docClient.put(params, (err, data) => {
@@ -132,6 +136,27 @@ rtm.on("message", async (message) => {
         plainTextSend(`공부중인 유저입니다`);
       }
       if (data.Items[0].status === 2) {
+        let stopTimeCalc =
+          Math.floor(message.event_ts) - data.Items[0].stopTime; //second
+
+        let params = {
+          TableName: tableName,
+          Item: {
+            PK: message.user,
+            SK: "status",
+            status: 1,
+            timeStamp: data.Items[0].timeStamp,
+            stopTime: data.Items[0].stopTime,
+            stopTimeCalc: data.Items[0].stopTimeCalc + stopTimeCalc,
+          },
+        };
+        docClient.put(params, (err, data) => {
+          if (err) {
+            plainTextSend("에러" + err);
+            return;
+          }
+          plainTextSend("공부를 재시작했습니다."); //업그레이드 할필요있음
+        });
       }
     }
   }
@@ -152,7 +177,15 @@ rtm.on("message", async (message) => {
       }
       //공부중이었던 유저가 공부 종료
       if (data.Items[0].status === 1) {
-        let studyTime = Math.floor(message.event_ts) - data.Items[0].timestamp; //second
+        const userData = data.Items[0];
+
+        let studyTime =
+          Math.floor(message.event_ts) -
+          userData.timeStamp -
+          userData.stopTimeCalc; //second
+
+        console.log(`순공부시간 ${studyTime}`);
+        console.log(`자리비움 시간 ${userData.stopTimeCalc}`);
 
         let params = {
           TableName: tableName,
@@ -160,19 +193,25 @@ rtm.on("message", async (message) => {
             PK: message.user,
             SK: "status",
             status: 0,
-            timestamp: Math.floor(message.event_ts),
+            timeStamp: Math.floor(message.event_ts),
+            stopTime: 0,
+            stopTimeCalc: 0,
           },
         };
         docClient.put(params, (err, data) => {
           if (err) {
-            plainTextSend("에러");
+            plainTextSend("에러" + err);
             return;
           }
-          studyTimeSend(`공부를 종료했습니다.`, secondToHHMMSS(studyTime));
+          console.log(userData.stopTimeCalc);
+          plainTextSend(`공부를 종료했습니다.
+          순 공부시간 ${studyTime}
+          자리비움 시간 ${userData.stopTimeCalc}`);
         });
       }
 
       if (data.Items[0].status === 2) {
+        plainTextSend("자리비움 상태입니다");
       }
     }
   }
@@ -193,10 +232,11 @@ rtm.on("message", async (message) => {
       }
       //공부중인 유저
       if (data.Items[0].status === 1) {
-        let studyTime = Math.floor(message.event_ts) - data.Items[0].timestamp; //second
+        let studyTime = Math.floor(message.event_ts) - data.Items[0].timeStamp; //second
         studyTimeSend(`공부중입니다.`, secondToHHMMSS(studyTime));
       }
       if (data.Items[0].status === 2) {
+        plainTextSend("자리비움 상태입니다"); // Todo:자리비움 시간도 보여줘야되나 ?
       }
     }
   }
@@ -211,7 +251,24 @@ rtm.on("message", async (message) => {
         plainTextSend("공부를 종료한 유저입니다");
       }
       if (data.Items[0].status === 1) {
-        //작업 필요
+        let params = {
+          TableName: tableName,
+          Item: {
+            PK: message.user,
+            SK: "status",
+            status: 2,
+            stopTime: Math.floor(message.event_ts),
+            timeStamp: data.Items[0].timeStamp,
+            stopTimeCalc: data.Items[0].stopTimeCalc,
+          },
+        };
+        docClient.put(params, (err, data) => {
+          if (err) {
+            plainTextSend("에러");
+            return;
+          }
+          plainTextSend("`자리비움`중 입니다 ( 다시 시작 `!in` )");
+        });
       }
       if (data.Items[0].status === 2) {
         plainTextSend("자리비움 상태입니다");
