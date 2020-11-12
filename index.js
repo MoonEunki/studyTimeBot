@@ -36,7 +36,7 @@ const studyTimeSend = async (message, time) => {
       text: message, //전송할 text
       attachments: JSON.stringify([
         {
-          color: "#3333FF", //파란색
+          color: "#3399FF", //파란색
           // color: "#36a64f", //초록색
           text: `공부시간 \`${time}\` `,
         },
@@ -91,7 +91,7 @@ rtm.on("message", async (message) => {
   if (message.text === "!in") {
     const data = await getUserData(message.user);
 
-    //결과값이 없는경우 신규유저다
+    //결과값이 없는경우 신규유저
     if (data.Count === 0) {
       let params = {
         TableName: tableName,
@@ -110,11 +110,7 @@ rtm.on("message", async (message) => {
         plainTextSend(`공부를 시작했습니다`);
       });
     } else {
-      if (data.Items[0].status === 1) {
-        plainTextSend(`공부중인 유저입니다`);
-      }
-      //공부 안하고있던 유저
-      else if (data.Items[0].status === 0) {
+      if (data.Items[0].status === 0) {
         let params = {
           TableName: tableName,
           Item: {
@@ -132,6 +128,11 @@ rtm.on("message", async (message) => {
           plainTextSend(`공부를 시작했습니다`);
         });
       }
+      if (data.Items[0].status === 1) {
+        plainTextSend(`공부중인 유저입니다`);
+      }
+      if (data.Items[0].status === 2) {
+      }
     }
   }
 
@@ -145,6 +146,10 @@ rtm.on("message", async (message) => {
     }
     //기존 유저
     else {
+      //원래 공부 종료상태였던 유저
+      if (data.Items[0].status === 0) {
+        plainTextSend("공부를 종료한 유저입니다");
+      }
       //공부중이었던 유저가 공부 종료
       if (data.Items[0].status === 1) {
         let studyTime = Math.floor(message.event_ts) - data.Items[0].timestamp; //second
@@ -166,9 +171,8 @@ rtm.on("message", async (message) => {
           studyTimeSend(`공부를 종료했습니다.`, secondToHHMMSS(studyTime));
         });
       }
-      //원래 공부 종료상태였던 유저
-      if (data.Items[0].status === 0) {
-        plainTextSend("공부를 종료한 유저입니다");
+
+      if (data.Items[0].status === 2) {
       }
     }
   }
@@ -183,14 +187,34 @@ rtm.on("message", async (message) => {
     }
     //기존유저
     else {
+      //공부중이 아닌유저
+      if (data.Items[0].status === 0) {
+        plainTextSend("공부를 종료한 유저입니다");
+      }
       //공부중인 유저
       if (data.Items[0].status === 1) {
         let studyTime = Math.floor(message.event_ts) - data.Items[0].timestamp; //second
         studyTimeSend(`공부중입니다.`, secondToHHMMSS(studyTime));
       }
-      //공부중이 아닌유저
-      else if (data.Items[0].status === 0) {
+      if (data.Items[0].status === 2) {
+      }
+    }
+  }
+
+  if (message.text === "!stop") {
+    const data = await getUserData(message.user);
+    //신규유저
+    if (data.Count === 0) {
+      plainTextSend("등록되지 않은 유저입니다");
+    } else {
+      if (data.Items[0].status === 0) {
         plainTextSend("공부를 종료한 유저입니다");
+      }
+      if (data.Items[0].status === 1) {
+        //작업 필요
+      }
+      if (data.Items[0].status === 2) {
+        plainTextSend("자리비움 상태입니다");
       }
     }
   }
