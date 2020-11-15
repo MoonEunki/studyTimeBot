@@ -2,8 +2,11 @@
 .DS_Store
 
 # config 
-aws_config.json
-slack_config.json
+config
+
+# Dependency directories
+node_modules/
+jspm_packages/
 
 # Logs
 logs
@@ -44,9 +47,7 @@ bower_components
 # Compiled binary addons (https://nodejs.org/api/addons.html)
 build/Release
 
-# Dependency directories
-node_modules/
-jspm_packages/
+
 
 # Snowpack dependency directory (https://snowpack.dev/)
 web_modules/

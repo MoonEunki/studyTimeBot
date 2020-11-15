@@ -1,88 +1,33 @@
-const AWS = require("aws-sdk");
-AWS.config.loadFromPath("./config/aws_config.json");
-const slack_config = require("./config/slack_config.json");
-const Slack = require("slack-node");
-const RtmPkg = require("@slack/rtm-api");
+import aws from "aws-sdk";
+const { config, DynamoDB } = aws;
+config.loadFromPath("./config/aws_config.json");
+const docClient = new DynamoDB.DocumentClient();
+
+import RtmPkg from "@slack/rtm-api";
 const { RTMClient } = RtmPkg;
-const docClient = new AWS.DynamoDB.DocumentClient();
 
-const token = slack_config.token; // slack token
+import { tableName, token } from "./config/slack.js"; //이건 나중에 뺴야됨
+
 const rtm = new RTMClient(token);
-const slack = new Slack(token);
-const tableName = slack_config.tableName; //DynamoDB table name
 
-const plainTextSend = async (message) => {
-  slack.api(
-    "chat.postMessage",
-    {
-      username: slack_config.botName, // 슬랙에 표시될 봇이름
-      channel: slack_config.channel, // 메시지가 전송될 채널
-      icon_emoji: slack_config.icon, // 봇 아이콘
-      text: message, //전송할 text
-    },
-    (err, response) => {
-      //   console.log(response, err);
-    }
-  );
-};
+import {
+  getUserData,
+  plainTextSend,
+  secondToHHMMSS,
+  studyTimeSend,
+} from "./utils.js";
 
-const studyTimeSend = async (message, time) => {
-  slack.api(
-    "chat.postMessage",
-    {
-      username: slack_config.botName, // 슬랙에 표시될 봇이름
-      channel: slack_config.channel, // 메시지가 전송될 채널
-      icon_emoji: slack_config.icon, // 봇 아이콘
-      text: message, //전송할 text
-      attachments: JSON.stringify([
-        {
-          color: "#3399FF", //파란색
-          // color: "#36a64f", //초록색
-          text: `공부시간 \`${time}\` `,
-        },
-      ]),
-    },
-    (err, response) => {
-      // console.log(response)
-    }
-  );
-};
-
-const secondToHHMMSS = (second) => {
-  let sec_num = parseInt(second, 10);
-  let hours = Math.floor(sec_num / 3600);
-  let minutes = Math.floor((sec_num - hours * 3600) / 60);
-  let seconds = sec_num - hours * 3600 - minutes * 60;
-
-  hours < 10 ? (hours = `0${hours}`) : hours;
-  minutes < 10 ? (minutes = `0${minutes}`) : minutes;
-  seconds < 10 ? (seconds = `0${seconds}`) : seconds;
-
-  return `${hours}시 ${minutes}분 ${seconds}초`;
-};
-
-const getUserData = (userId) => {
-  return new Promise((resolve, reject) => {
-    const params = {
-      TableName: tableName,
-      KeyConditionExpression: "PK = :PK and SK = :SK",
-      ExpressionAttributeValues: {
-        ":PK": userId,
-        ":SK": "status",
-      },
-    };
-
-    docClient.query(params, (err, data) => {
-      if (err) {
-        console.log(err);
-        reject(err);
-      } else {
-        console.log(data);
-        resolve(data);
-      }
-    });
-  });
-};
+/**
+ * 비지니스 로직을 컨트롤러에 넣지마라 , 서비스 계층에 넣어라 (여기에 SQL넣지마라)
+ *
+ * rtm.on("message", async (message) => {}) 이부분은
+ * 이벤트 처리하기도 바쁜데, CRUD 까지 하니까 이벤트 처리할때 그냥 user를 매개변수로 받는게 어떨까 싶다.
+ * 에러 스택트레이스를 줄여야지.. 에러는 한데 모으는게 중요하다.
+ *
+ * crud 하기전에, 연산이 끝나고 연산검증해야됨 , 그래야 디버깅이 쉬움
+ *
+ *
+ */
 
 rtm.start();
 
@@ -291,6 +236,6 @@ rtm.on("message", async (message) => {
   \`!out\` 공부종료
   \`!stop\` 자리비움
   \`!status\` 현재상태
-      `);
+  `);
   }
 });
