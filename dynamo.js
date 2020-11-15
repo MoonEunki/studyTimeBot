@@ -1,6 +1,6 @@
 import aws from "aws-sdk";
 const { config, DynamoDB } = aws;
-config.loadFromPath("./config/aws_config.json");
+// config.loadFromPath("./config/aws_config.json");
 const docClient = new DynamoDB.DocumentClient();
 import {
   sendMessage,
