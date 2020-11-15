@@ -146,7 +146,7 @@ const restartStudy = (userId, stopTimeCalc) => {
       // console.log("UpdateItem succeeded:", JSON.stringify(data));
       sendMessage(
         simpleMessage(
-          ":computer:`공부중`입니다 (자리비움:`/stop`,공부종료:`/out`)"
+          ":computer:`공부중`입니다 (자리비움:`!stop`,공부종료:`!out`)"
         )
       ); //공부시간,자리비움시간도 표시하게 하기?
     }
