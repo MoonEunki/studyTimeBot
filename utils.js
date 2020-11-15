@@ -3,7 +3,7 @@ import { botName, token, channelName, icon_emoji } from "./config/slack.js";
 
 const slack = new Slack(token);
 
-const timeMessage = (text, time) => {
+const timeMessage = (text, studyTime, stopTime) => {
   return {
     username: botName, // 슬랙에 표시될 봇이름
     channel: channelName, // 메시지가 전송될 채널
@@ -12,10 +12,9 @@ const timeMessage = (text, time) => {
     attachments: JSON.stringify([
       {
         color: "#3399FF", //파란색
-        text: `공부시간 \`${time}\` `,
-        // 순 공부시간: 00시 03분 41초
-        // 자리비움 시간: 00시 00분 06초
-        // 이런식으로 업데이트 필요
+        text: `
+순 공부시간 :\`${studyTime}\` 
+자리비움 시간 :\`${stopTime}\` `,
       },
     ]),
   };
