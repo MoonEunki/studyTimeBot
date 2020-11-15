@@ -3,12 +3,7 @@ import { botName, token, channelName, icon_emoji } from "./config/slack.js";
 
 const slack = new Slack(token);
 
-/*
- * longMessage, shortMessage 라는 util 의 함수를 만들어서
- * 메시지 포맷 json을 리턴방식으로 받는게, 가독성이 훨씬 좋을거같다
- */
-
-const longMessage = (text, time) => {
+const timeMessage = (text, time) => {
   return {
     username: botName, // 슬랙에 표시될 봇이름
     channel: channelName, // 메시지가 전송될 채널
@@ -18,12 +13,15 @@ const longMessage = (text, time) => {
       {
         color: "#3399FF", //파란색
         text: `공부시간 \`${time}\` `,
+        // 순 공부시간: 00시 03분 41초
+        // 자리비움 시간: 00시 00분 06초
+        // 이런식으로 업데이트 필요
       },
     ]),
   };
 };
 
-const shortMessage = (text) => {
+const simpleMessage = (text) => {
   return {
     username: botName, // 슬랙에 표시될 봇이름
     channel: channelName, // 메시지가 전송될 채널
@@ -32,15 +30,9 @@ const shortMessage = (text) => {
   };
 };
 
-const plainTextSend = async (text) => {
-  slack.api("chat.postMessage", shortMessage(text), (err, response) => {
+const sendMessage = async (json) => {
+  slack.api("chat.postMessage", json, (err, response) => {
     //   console.log(response, err);
-  });
-};
-
-const studyTimeSend = async (text, time) => {
-  slack.api("chat.postMessage", longMessage(text, time), (err, response) => {
-    // console.log(response)
   });
 };
 
@@ -60,9 +52,4 @@ const secondToHHmmss = (second) => {
   return `${hours}시 ${minutes}분 ${seconds}초`;
 };
 
-/* config랑 utils 로 조합하는게 어떨까.
- * 설정 파일을 세팅해서 넘겨주는 configs/slack.ts 랑
- * utils.studyTimeSend 같은걸로 단일화 하는것도 생각해봐라
- */
-
-export { plainTextSend, studyTimeSend, secondToHHmmss };
+export { simpleMessage, timeMessage, secondToHHmmss, sendMessage };
