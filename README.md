@@ -22,9 +22,11 @@ Slack API의 user ID 를 받아서 사용하기때문에 유저별로 시간 적
 
 [https://youtu.be/ibfu2VlQAds](https://youtu.be/ibfu2VlQAds)
 
-## 실행 이미지
+## 실행 예시
 
 <img src="https://user-images.githubusercontent.com/59547369/99194067-914ed980-27c0-11eb-8941-edee42e0f324.png" width="500">
+
+<img src="https://user-images.githubusercontent.com/59547369/99286375-1c40da00-287c-11eb-8526-bd2a3a7a84bd.png" width="500">
 
 ## config 관련
 
