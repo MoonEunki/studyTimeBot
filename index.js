@@ -34,7 +34,7 @@ rtm.on("message", async (message) => {
     }
 
     if (userData.status === 1) {
-      sendMessage(simpleMessage(":computer:`공부중`입니다"));
+      sendMessage(simpleMessage(":computer: 이미 `공부중`입니다"));
     }
 
     if (userData.status === 2) {
@@ -56,7 +56,7 @@ rtm.on("message", async (message) => {
       let userData = data.Items[0];
 
       if (userData.status === 0) {
-        sendMessage(simpleMessage("공부를 종료한 유저입니다"));
+        sendMessage(simpleMessage("이미 공부를 종료한 유저입니다"));
       }
 
       if (userData.status === 1) {
@@ -130,7 +130,7 @@ rtm.on("message", async (message) => {
       if (userData.status === 2) {
         sendMessage(
           simpleMessage(
-            ":hourglass_flowing_sand: `자리비움중` 입니다 (다시 시작 `!in`)"
+            ":hourglass_flowing_sand: 이미 `자리비움중` 입니다 (다시 시작 `!in`)"
           )
         );
       }
